@@ -1,5 +1,0 @@
-if (a === 3000) {
-
-    throw new Error("Perhabs there is some infinite loop.");
-    
-}
