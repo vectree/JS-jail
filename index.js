@@ -2,13 +2,9 @@
 
 const version = '0.0.0';
 
-const esprima = require('esprima');
-const walk = require( 'esprima-walk' ).walkAddParent;
-const escodegen = require('escodegen');
-
-// Iterations count for detection the infinite loop.
-const LOOP_ITERATIONS_COUNT = 300;
-const INFINITE_LOOP_EXCEPTION_MESSAGE = 'Perhabs there is some infinite loop in the code';
+const infiniteLoopStopper = require('./infinite-loop-stopper');
+const infiniteLoopStopperInjector = require('./infinite-loop-stopper/injector');
+const environment = require('./environment');
 
 module.exports = JSJail();
 
@@ -19,6 +15,7 @@ function JSJail() {
     let t = {};
 
     t.version = version;
+    
     t.init = init;
     t.run = run;
 
@@ -27,21 +24,16 @@ function JSJail() {
     /**
      * Initializes your code for a further execution into the jail.
      *
+     * @public
      * @param _code The code which will execute by 'run' method.
      */
     function init(_code) {
 
-        const ast = esprima.parse(_code);
+        code = infiniteLoopStopperInjector.inject(_code);
 
-        if (window) {
-
-            makeStubDeclarations(ast, Object.getOwnPropertyNames(window));
-
-        }
-
-        wrapAllLoops(ast);
-
-        code = escodegen.generate(ast);
+        code = tryToCoverWindow(code);
+    
+        environment.add({infiniteLoopStopper});
 
     }
 
@@ -49,30 +41,20 @@ function JSJail() {
      * Runs your code into the JS-jail.
      *
      * @public
-     * @param environment
+     * @param additionalEnvironment
      */
-    function run(environment) {
+    function run(additionalEnvironment) {
 
         if (!code) {
 
             throw new Error('At first the code to execute must initialize by init method!');
 
         }
+    
+        environment.add(additionalEnvironment);
 
-        let names = [];
-        let values = [];
-
-        // Separates environment into two arrays: names and values to the following initialization of Function object.
-        if (environment) {
-
-            names = Object.keys(environment);
-            names.forEach(function (key) {
-
-                values.push(environment[key]);
-
-            });
-
-        }
+        let values = environment.getValues();
+        let names = environment.getNames();
 
         // Add code as the last parameter of function for an apply call.
         names.push(code);
@@ -84,48 +66,27 @@ function JSJail() {
     }
 
     /**
-     * This method is for struggle with some possible infinite loops.
-     *
-     * @private
-     * @param {Object} ast The AST of source code.
-     */
-    function wrapAllLoops(ast) {
-
-        const loopStatements = ["ForOfStatement", "ForStatement", "ForInStatement", "WhileStatement", "DoWhileStatement"];
-        const beforeLoopBody = "var a = 0;";
-        const innerLoopBody = "if (a === " + LOOP_ITERATIONS_COUNT +
-                               ") { throw new Error('" + INFINITE_LOOP_EXCEPTION_MESSAGE + "') }; a++;";
-
-        walk(ast, function (node) {
-
-            var result = loopStatements.indexOf(node.type);
-
-            if (result != -1) {
-
-                node.parent.body.unshift(esprima.parse(beforeLoopBody));
-                node.body.body.unshift(esprima.parse(innerLoopBody));
-
-            }
-
-        });
-
-    }
-
-    /**
      * Makes stubs of variables for avoid the changing of outside environment which has these variables too.
      *
      * @private
-     * @param {Array} variables The name list of variables for stubs.
-     * @param {Object} ast The AST of source code.
+     * @param {String} code The source code.
      */
-    function makeStubDeclarations(ast, variables) {
+    function tryToCoverWindow(code) {
 
-        variables.forEach(function(name) {
+        if (window) {
 
-            let stub = 'var ' + name + ';';
-            ast.body.unshift(esprima.parse(stub));
+            const variables = Object.getOwnPropertyNames(window);
 
-        });
+            variables.forEach(function(name) {
+
+                let stub = 'var ' + name + ';';
+                code = stub + '\n' + code;
+
+            });
+
+        }
+
+        return code;
 
     }
 
