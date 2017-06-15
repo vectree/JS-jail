@@ -10,59 +10,56 @@ module.exports = JSJail();
 
 function JSJail() {
 
-    let code;
+    let jailInitializationCode;
 
     let t = {};
 
     t.version = version;
 
     t.init = init;
-    t.run = run;
+    t.make = make;
 
     return t;
 
     /**
-     * Initializes your code for a further execution into the jail.
+     * Initializes your jail code for a further execution into the jail.
      *
      * @public
-     * @param _code The code which will execute by 'run' method.
+     * @param code The code which will initialize your jail after execution of make method.
      */
-    function init(_code) {
+    function init(code) {
 
-        code = LoopStopInjector.inject(_code);
+        jailInitializationCode = LoopStopInjector.inject(code);
 
-        code = tryToCoverWindow(code);
+        jailInitializationCode = tryToCoverWindow(jailInitializationCode);
 
         environment.add({LoopStopManager});
 
     }
 
     /**
-     * Runs your code into the JS-jail.
+     * Return an object which represents the jail (separate environment to JS execution).
      *
      * @public
-     * @param additionalEnvironment
      */
-    function run(additionalEnvironment) {
+    function make() {
 
-        if (!code) {
+        if (!jailInitializationCode) {
 
-            throw new Error('At first the code to execute must initialize by init method!');
+            throw new Error('At first the jail initialization code must initialize by init method!');
 
         }
-
-        environment.add(additionalEnvironment);
 
         let values = environment.getValues();
         let names = environment.getNames();
 
         // Add code as the last parameter of function for an apply call.
-        names.push(code);
+        names.push(jailInitializationCode);
 
-        const f = Function.apply(this, names);
+        const f = Function.apply(null, names);
 
-        f.apply(this, values);
-
+        return new f(values);
+        
     }
 
     /**
