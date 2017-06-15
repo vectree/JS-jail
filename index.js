@@ -2,8 +2,8 @@
 
 const version = '0.0.0';
 
-const infiniteLoopStopper = require('./infinite-loop-stopper');
-const infiniteLoopStopperInjector = require('./infinite-loop-stopper/injector');
+const LoopStopManager = require('./loop-stop/manager');
+const LoopStopInjector = require('./loop-stop/injector');
 const environment = require('./environment');
 
 module.exports = JSJail();
@@ -15,7 +15,7 @@ function JSJail() {
     let t = {};
 
     t.version = version;
-    
+
     t.init = init;
     t.run = run;
 
@@ -29,11 +29,11 @@ function JSJail() {
      */
     function init(_code) {
 
-        code = infiniteLoopStopperInjector.inject(_code);
+        code = LoopStopInjector.inject(_code);
 
         code = tryToCoverWindow(code);
-    
-        environment.add({infiniteLoopStopper});
+
+        environment.add({LoopStopManager});
 
     }
 
@@ -50,7 +50,7 @@ function JSJail() {
             throw new Error('At first the code to execute must initialize by init method!');
 
         }
-    
+
         environment.add(additionalEnvironment);
 
         let values = environment.getValues();
@@ -68,21 +68,33 @@ function JSJail() {
     /**
      * Makes stubs of variables for avoid the changing of outside environment which has these variables too.
      *
+     * TODO need to take this function into a separate module.
+     *
      * @private
      * @param {String} code The source code.
      */
     function tryToCoverWindow(code) {
 
-        if (window) {
+        if (typeof window === "object") {
 
-            const variables = Object.getOwnPropertyNames(window);
+            let variables = Object.getOwnPropertyNames(window);
 
-            variables.forEach(function(name) {
+            if (!window.hasOwnProperty('window')) {
 
-                let stub = 'var ' + name + ';';
-                code = stub + '\n' + code;
+                variables.push('window');
+
+            }
+
+            let stubDeclarations = '';
+            variables.forEach((name) => {
+
+                let stub = 'var ' + name + '; \n';
+
+                stubDeclarations = stubDeclarations + stub;
 
             });
+
+            code = stubDeclarations + code;
 
         }
 

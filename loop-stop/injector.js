@@ -9,9 +9,9 @@
 
 const esprima = require('esprima');
 
-module.exports = InfiniteLoopStopperInjector();
+module.exports = LoopStopInjector();
 
-function InfiniteLoopStopperInjector() {
+function LoopStopInjector() {
 
     let t = {};
 
@@ -27,11 +27,11 @@ function InfiniteLoopStopperInjector() {
      */
     function inject(code) {
 
-        const LOOP_CHECK = 'if (infiniteLoopStopper.shouldStopExecution(%d)) break; ';
-        const LOOP_EXIT = '\ninfiniteLoopStopper.exitedLoop(%d);\n';
+        const LOOP_CHECK = 'if (LoopStopManager.shouldStopExecution(%d)) break; ';
+        const LOOP_EXIT = '\nLoopStopManager.exitedLoop(%d);\n';
 
-        var loopId = 1;
-        var patches = [];
+        let loopId = 1;
+        let patches = [];
 
         const loopStatements = ["ForOfStatement",
                                 "ForStatement",
@@ -39,16 +39,18 @@ function InfiniteLoopStopperInjector() {
                                 "WhileStatement",
                                 "DoWhileStatement"];
 
-        esprima.parse(code, { range: true }, function (node) {
+        esprima.parse(code,
+                      { range: true },
+                      (node) => {
 
             var isItLoopStatement = loopStatements.indexOf(node.type) != -1;
 
             if (isItLoopStatement) {
 
-                var start = 1 + node.body.range[0];
-                var end = node.body.range[1];
-                var prolog = LOOP_CHECK.replace('%d', loopId);
-                var epilog = '';
+                let start = 1 + node.body.range[0];
+                let end = node.body.range[1];
+                let prolog = LOOP_CHECK.replace('%d', loopId);
+                let epilog = '';
 
                 if (node.body.type !== 'BlockStatement') {
 
@@ -62,7 +64,8 @@ function InfiniteLoopStopperInjector() {
                 patches.push({ pos: start, str: prolog });
                 patches.push({ pos: end, str: epilog });
                 patches.push({ pos: node.range[1] + 1, str: LOOP_EXIT.replace('%d', loopId) });
-                ++loopId;
+
+                loopId++;
 
             }
 

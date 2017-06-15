@@ -7,9 +7,9 @@
  * @author iretd
  */
 
-module.exports = InfiniteLoopStopper();
+module.exports = Object.freeze(LoopStopManager());
 
-function InfiniteLoopStopper() {
+function LoopStopManager() {
 
     //------------------------
     // MILLISECONDS
@@ -37,7 +37,7 @@ function InfiniteLoopStopper() {
 
     function shouldStopExecution(loopID) {
 
-        var shouldStop = shouldStopLoop(loopID);
+        let shouldStop = shouldStopLoop(loopID);
 
         if( shouldStop === true ) {
 
