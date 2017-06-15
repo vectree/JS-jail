@@ -4,54 +4,37 @@ const version = '0.0.0';
 
 const LoopStopManager = require('./loop-stop/manager');
 const LoopStopInjector = require('./loop-stop/injector');
-const environment = require('./environment');
+const jailEnvironment = require('./environment');
 
 module.exports = JSJail();
 
 function JSJail() {
 
-    let jailInitializationCode;
+    // Pre initialization of necessary parameters in jail environment.
+    jailEnvironment.add({LoopStopManager});
 
     let t = {};
 
     t.version = version;
 
-    t.init = init;
     t.make = make;
 
     return t;
-
-    /**
-     * Initializes your jail code for a further execution into the jail.
-     *
-     * @public
-     * @param code The code which will initialize your jail.
-     */
-    function init(code) {
-
-        jailInitializationCode = LoopStopInjector.inject(code);
-
-        jailInitializationCode = tryToCoverWindow(jailInitializationCode);
-
-        environment.add({LoopStopManager});
-
-    }
 
     /**
      * Returns an object which represents the jail (separate environment to JS execution).
      *
      * @public
      */
-    function make() {
+    function make(code) {
 
-        if (!jailInitializationCode) {
+        let jailInitializationCode = LoopStopInjector.inject(code);
 
-            throw new Error('At first the jail initialization code must initialize by init method!');
+        jailInitializationCode = tryToCoverWindow(jailInitializationCode);
 
-        }
-
-        const values = environment.getValues();
-        const names = environment.getNames();
+        // Preparation for function call.
+        const values = jailEnvironment.getValues();
+        const names = jailEnvironment.getNames();
 
         // Add code as the last parameter of function for an apply call.
         names.push(jailInitializationCode);
