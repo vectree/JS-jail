@@ -2,13 +2,9 @@
 
 const version = '0.0.0';
 
-const esprima = require('esprima');
-const walk = require( 'esprima-walk' ).walkAddParent;
-const escodegen = require('escodegen');
-
-// Iterations count for detection the infinite loop.
-const LOOP_ITERATIONS_COUNT = 300;
-const INFINITE_LOOP_EXCEPTION_MESSAGE = 'Perhabs there is some infinite loop in the code';
+const LoopStopManager = require('./loop-stop/manager');
+const LoopStopInjector = require('./loop-stop/injector');
+const environment = require('./environment');
 
 module.exports = JSJail();
 
@@ -19,6 +15,7 @@ function JSJail() {
     let t = {};
 
     t.version = version;
+
     t.init = init;
     t.run = run;
 
@@ -27,21 +24,16 @@ function JSJail() {
     /**
      * Initializes your code for a further execution into the jail.
      *
+     * @public
      * @param _code The code which will execute by 'run' method.
      */
     function init(_code) {
 
-        const ast = esprima.parse(_code);
+        code = LoopStopInjector.inject(_code);
 
-        if (window) {
+        code = tryToCoverWindow(code);
 
-            makeStubDeclarations(ast, Object.getOwnPropertyNames(window));
-
-        }
-
-        wrapAllLoops(ast);
-
-        code = escodegen.generate(ast);
+        environment.add({LoopStopManager});
 
     }
 
@@ -49,9 +41,9 @@ function JSJail() {
      * Runs your code into the JS-jail.
      *
      * @public
-     * @param environment
+     * @param additionalEnvironment
      */
-    function run(environment) {
+    function run(additionalEnvironment) {
 
         if (!code) {
 
@@ -59,20 +51,10 @@ function JSJail() {
 
         }
 
-        let names = [];
-        let values = [];
+        environment.add(additionalEnvironment);
 
-        // Separates environment into two arrays: names and values to the following initialization of Function object.
-        if (environment) {
-
-            names = Object.keys(environment);
-            names.forEach(function (key) {
-
-                values.push(environment[key]);
-
-            });
-
-        }
+        let values = environment.getValues();
+        let names = environment.getNames();
 
         // Add code as the last parameter of function for an apply call.
         names.push(code);
@@ -84,48 +66,39 @@ function JSJail() {
     }
 
     /**
-     * This method is for struggle with some possible infinite loops.
+     * Makes stubs of variables for avoid the changing of outside environment which has these variables too.
+     *
+     * TODO need to take this function into a separate module.
      *
      * @private
-     * @param {Object} ast The AST of source code.
+     * @param {String} code The source code.
      */
-    function wrapAllLoops(ast) {
+    function tryToCoverWindow(code) {
 
-        const loopStatements = ["ForOfStatement", "ForStatement", "ForInStatement", "WhileStatement", "DoWhileStatement"];
-        const beforeLoopBody = "var a = 0;";
-        const innerLoopBody = "if (a === " + LOOP_ITERATIONS_COUNT +
-                               ") { throw new Error('" + INFINITE_LOOP_EXCEPTION_MESSAGE + "') }; a++;";
+        if (typeof window === "object") {
 
-        walk(ast, function (node) {
+            let variables = Object.getOwnPropertyNames(window);
 
-            var result = loopStatements.indexOf(node.type);
+            if (!window.hasOwnProperty('window')) {
 
-            if (result != -1) {
-
-                node.parent.body.unshift(esprima.parse(beforeLoopBody));
-                node.body.body.unshift(esprima.parse(innerLoopBody));
+                variables.push('window');
 
             }
 
-        });
+            let stubDeclarations = '';
+            variables.forEach((name) => {
 
-    }
+                let stub = 'var ' + name + '; \n';
 
-    /**
-     * Makes stubs of variables for avoid the changing of outside environment which has these variables too.
-     *
-     * @private
-     * @param {Array} variables The name list of variables for stubs.
-     * @param {Object} ast The AST of source code.
-     */
-    function makeStubDeclarations(ast, variables) {
+                stubDeclarations = stubDeclarations + stub;
 
-        variables.forEach(function(name) {
+            });
 
-            let stub = 'var ' + name + ';';
-            ast.body.unshift(esprima.parse(stub));
+            code = stubDeclarations + code;
 
-        });
+        }
+
+        return code;
 
     }
 

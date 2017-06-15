@@ -20,8 +20,6 @@
   "author": "hustle hard code",
   "license": "MIT",
   "dependencies": {
-    "escodegen": "^1.8.1",
-    "esprima": "^4.0.0",
-    "esprima-walk": "^0.1.0"
+    "esprima": "^4.0.0"
   }
 }
