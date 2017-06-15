@@ -1,14 +1,13 @@
 "use strict";
 
+module.exports = Environment();
+
 /**
  * THE COMMENTS WILL BE HERE AS SOON AS POSSIBLE :)
  *
  * @since 13.06.17
  * @author iretd
  */
-
-module.exports = Environment();
-
 function Environment() {
 
     let environment = {};

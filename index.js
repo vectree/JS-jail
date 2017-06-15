@@ -25,7 +25,7 @@ function JSJail() {
      * Initializes your jail code for a further execution into the jail.
      *
      * @public
-     * @param code The code which will initialize your jail after execution of make method.
+     * @param code The code which will initialize your jail.
      */
     function init(code) {
 
@@ -38,7 +38,7 @@ function JSJail() {
     }
 
     /**
-     * Return an object which represents the jail (separate environment to JS execution).
+     * Returns an object which represents the jail (separate environment to JS execution).
      *
      * @public
      */
@@ -50,8 +50,8 @@ function JSJail() {
 
         }
 
-        let values = environment.getValues();
-        let names = environment.getNames();
+        const values = environment.getValues();
+        const names = environment.getNames();
 
         // Add code as the last parameter of function for an apply call.
         names.push(jailInitializationCode);
@@ -59,7 +59,7 @@ function JSJail() {
         const f = Function.apply(null, names);
 
         return new f(values);
-        
+
     }
 
     /**

@@ -1,14 +1,13 @@
 "use strict";
 
+module.exports = Object.freeze(LoopStopManager());
+
 /**
  * THE COMMENTS WILL BE HERE AS SOON AS POSSIBLE :)
  *
  * @since 13.06.17
  * @author iretd
  */
-
-module.exports = Object.freeze(LoopStopManager());
-
 function LoopStopManager() {
 
     //------------------------
@@ -39,7 +38,7 @@ function LoopStopManager() {
 
         let shouldStop = shouldStopLoop(loopID);
 
-        if( shouldStop === true ) {
+        if(shouldStop) {
 
             // TODO A temporary log.
             console.warn("An infinite loop (or a loop taking too long) was detected, so we stopped its execution. Sorry!");
@@ -83,7 +82,7 @@ function LoopStopManager() {
 
         var now = getTime();
 
-        if (timeOfFirstCallToShouldStopLoop === 0) {
+        if (!timeOfFirstCallToShouldStopLoop) {
 
             timeOfFirstCallToShouldStopLoop = now;
 
@@ -140,7 +139,7 @@ function LoopStopManager() {
 
         }
 
-        var loopRunningTime = now - loopTimers[loopID];
+        let loopRunningTime = now - loopTimers[loopID];
 
         if (loopRunningTime > MAX_TIME_IN_LOOP_TILL_EXIT) {
 

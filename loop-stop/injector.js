@@ -1,16 +1,15 @@
 "use strict";
 
+const esprima = require('esprima');
+
+module.exports = LoopStopInjector();
+
 /**
  * THE COMMENTS WILL BE HERE AS SOON AS POSSIBLE :)
  *
  * @since 13.06.17
  * @author iretd
  */
-
-const esprima = require('esprima');
-
-module.exports = LoopStopInjector();
-
 function LoopStopInjector() {
 
     let t = {};
@@ -39,9 +38,7 @@ function LoopStopInjector() {
                                 "WhileStatement",
                                 "DoWhileStatement"];
 
-        esprima.parse(code,
-                      { range: true },
-                      (node) => {
+        esprima.parse(code, { range: true }, (node) => {
 
             var isItLoopStatement = loopStatements.indexOf(node.type) != -1;
 
