@@ -1,14 +1,13 @@
 "use strict";
 
+module.exports = Environment();
+
 /**
  * THE COMMENTS WILL BE HERE AS SOON AS POSSIBLE :)
  *
  * @since 13.06.17
  * @author iretd
  */
-
-module.exports = Environment();
-
 function Environment() {
 
     let environment = {};
@@ -45,15 +44,8 @@ function Environment() {
             Object.assign(environment, value);
 
             names = Object.keys(environment);
-
-            var _values = [];
-            names.forEach(function (key) {
-
-                _values.push(environment[key]);
-
-            });
-
-            values = _values;
+			// TODO ES-2017 - > values = Object.values(environment);
+			values = Object.keys(environment).map((k) => environment[k]);
 
         }
 
