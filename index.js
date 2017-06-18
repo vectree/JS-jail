@@ -33,15 +33,13 @@ function JSJail() {
         jailInitializationCode = tryToCoverWindow(jailInitializationCode);
 
         // Preparation for function call.
-        const values = jailEnvironment.getValues();
-        const names = jailEnvironment.getNames();
-
+        const parameters = jailEnvironment.getNames();
         // Add code as the last parameter of function for an apply call.
-        names.push(jailInitializationCode);
+        parameters.push(jailInitializationCode);
 
-        const f = Function.apply(null, names);
+        const f = Function.apply(null, parameters);
 
-        return new f(values);
+        return new f(jailEnvironment.getValues());
 
     }
 
