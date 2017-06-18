@@ -1,7 +1,7 @@
 {
-  "name": "jail",
-  "version": "1.0.0",
-  "description": "A sandbox which isolates your code from current global environment and struggles to infinite loop.",
+  "name": "js-jail",
+  "version": "0.0.0",
+  "description": "A sandbox which isolates your code from global environment and struggles to infinite loops.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,7 +17,7 @@
     "type": "git",
     "url": "git://github.com/SpaceCraftCode/JS-jail.git"
   },
-  "author": "hustle hard code",
+  "author": "spacecraftcode.ru",
   "license": "MIT",
   "dependencies": {
     "esprima": "^4.0.0"
