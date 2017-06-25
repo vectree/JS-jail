@@ -1,5 +1,7 @@
 "use strict";
 
+var lodash = require('lodash');
+
 module.exports = Environment();
 
 /**
@@ -10,12 +12,12 @@ module.exports = Environment();
  */
 function Environment() {
 
-    let environment = {};
+    var environment = {};
 
-    let names = [];
-    let values = [];
+    var names = [];
+    var values = [];
 
-    let t = {};
+    var t = {};
 
     t.getNames = getNames;
     t.getValues = getValues;
@@ -41,11 +43,11 @@ function Environment() {
         // Separates environment into two arrays: names and values to the following initialization of Function object.
         if (value) {
 
-            Object.assign(environment, value);
+            lodash.assign(environment, value);
 
-            names = Object.keys(environment);
+            names = lodash.keys(environment);
 			// TODO ES-2017 - > values = Object.values(environment);
-			values = Object.keys(environment).map((k) => environment[k]);
+			values = lodash.keys(environment).map(function(k) { return environment[k]});
 
         }
 

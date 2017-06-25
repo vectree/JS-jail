@@ -13,21 +13,21 @@ function LoopStopManager() {
     //------------------------
     // MILLISECONDS
     //------------------------
-    const START_MONITORING_AFTER = 2000;
-    const STOP_ALL_MONITORING_TIMEOUT = 5000;
-    const MAX_TIME_IN_LOOP_TILL_EXIT = 2200;
+    var START_MONITORING_AFTER = 2000;
+    var STOP_ALL_MONITORING_TIMEOUT = 5000;
+    var MAX_TIME_IN_LOOP_TILL_EXIT = 2200;
 
     // If we successfully run for X seconds no need to continue
     // to monitor because we know the program isn't locked
-    let programNoLongerBeingMonitored = false;
-    let programKilledSoStopMonitoring = false;
-    let timeOfFirstCallToShouldStopLoop = 0;
+    var programNoLongerBeingMonitored = false;
+    var programKilledSoStopMonitoring = false;
+    var timeOfFirstCallToShouldStopLoop = 0;
 
-    let loopExits = {};
+    var loopExits = {};
     // Keep track of how long program spends in single loop w/o an exit
-    let loopTimers = {};
+    var loopTimers = {};
 
-    let t = {};
+    var t = {};
 
     t.shouldStopExecution = shouldStopExecution;
     t.exitedLoop = exitedLoop;
@@ -36,7 +36,7 @@ function LoopStopManager() {
 
     function shouldStopExecution(loopID) {
 
-        let shouldStop = shouldStopLoop(loopID);
+        var shouldStop = shouldStopLoop(loopID);
 
         if(shouldStop) {
 
@@ -139,7 +139,7 @@ function LoopStopManager() {
 
         }
 
-        let loopRunningTime = now - loopTimers[loopID];
+        var loopRunningTime = now - loopTimers[loopID];
 
         if (loopRunningTime > MAX_TIME_IN_LOOP_TILL_EXIT) {
 

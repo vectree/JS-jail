@@ -1,6 +1,6 @@
 "use strict";
 
-const esprima = require('esprima');
+var esprima = require('esprima');
 
 module.exports = LoopStopInjector();
 
@@ -12,7 +12,7 @@ module.exports = LoopStopInjector();
  */
 function LoopStopInjector() {
 
-    let t = {};
+    var t = {};
 
     t.inject = inject;
 
@@ -26,28 +26,28 @@ function LoopStopInjector() {
      */
     function inject(code) {
 
-        const LOOP_CHECK = 'if (LoopStopManager.shouldStopExecution(%d)) break; ';
-        const LOOP_EXIT = '\nLoopStopManager.exitedLoop(%d);\n';
+        var LOOP_CHECK = 'if (LoopStopManager.shouldStopExecution(%d)) break; ';
+        var LOOP_EXIT = '\nLoopStopManager.exitedLoop(%d);\n';
 
-        let loopId = 1;
-        let patches = [];
+        var loopId = 1;
+        var patches = [];
 
-        const loopStatements = ["ForOfStatement",
-                                "ForStatement",
-                                "ForInStatement",
-                                "WhileStatement",
-                                "DoWhileStatement"];
+        var loopStatements = ["ForOfStatement",
+                              "ForStatement",
+                              "ForInStatement",
+                              "WhileStatement",
+                              "DoWhileStatement"];
 
-        esprima.parse(code, { range: true }, (node) => {
+        esprima.parse(code, { range: true }, function(node) {
 
             var isItLoopStatement = loopStatements.indexOf(node.type) != -1;
 
             if (isItLoopStatement) {
 
-                let start = 1 + node.body.range[0];
-                let end = node.body.range[1];
-                let prolog = LOOP_CHECK.replace('%d', loopId);
-                let epilog = '';
+                var start = 1 + node.body.range[0];
+                var end = node.body.range[1];
+                var prolog = LOOP_CHECK.replace('%d', loopId);
+                var epilog = '';
 
                 if (node.body.type !== 'BlockStatement') {
 
