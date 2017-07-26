@@ -2,6 +2,8 @@
 
 var version = '0.0.0';
 
+var lodash = require('lodash');
+
 var LoopStopManager = require('./loop-stop/manager');
 var LoopStopInjector = require('./loop-stop/injector');
 var jailEnvironment = require('./environment');
@@ -28,18 +30,27 @@ function JSJail() {
      */
     function make(code) {
 
-        var jailInitializationCode = LoopStopInjector.inject(code);
+        try {
 
-        jailInitializationCode = tryToCoverWindow(jailInitializationCode);
+            var jailInitializationCode = LoopStopInjector.inject(code);
 
-        // Preparation for function call.
-        var parameters = jailEnvironment.getNames();
-        // Add code as the last parameter of function for an apply call.
-        parameters.push(jailInitializationCode);
+            jailInitializationCode = tryToCoverWindow(jailInitializationCode);
 
-        var f = Function.apply(null, parameters);
+            // Preparation for function call.
+            var parameters = jailEnvironment.getNames();
+            // Add code as the last parameter of function for an apply call.
+            parameters.push(jailInitializationCode);
 
-        return new f(jailEnvironment.getValues());
+            var f = Function.apply(null, parameters);
+
+            return new f(jailEnvironment.getValues());
+
+        } catch (err) {
+
+            // TODO Will make some handling in the near future
+            console.error("While we were trying to make a jail some problem caused:", err);
+
+        }
 
     }
 
@@ -66,9 +77,14 @@ function JSJail() {
             var stubDeclarations = '';
             variables.forEach(function(name) {
 
-                var stub = 'var ' + name + '; \n';
+                // If the name really can be the name of variable.
+                if (lodash.isString(name)) {
 
-                stubDeclarations = stubDeclarations + stub;
+                    var stub = 'var ' + name + '; \n';
+
+                    stubDeclarations = stubDeclarations + stub;
+
+                }
 
             });
 
